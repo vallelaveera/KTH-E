@@ -1,0 +1,7 @@
+modal>=0.62.0
+numpy
+opencv-python-headless
+pillow
+scipy
+openai-whisper
+python-dotenv
