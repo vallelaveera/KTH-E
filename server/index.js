@@ -1,60 +1,62 @@
 require('dotenv').config();
 
 const express = require('express');
-const Anthropic = require('@anthropic-ai/sdk');
+const path = require('path');
+const { translateToEnglish } = require('../lib/translate');
+const { transcribeAudioBase64, synthesizeEnglishSpeech } = require('../lib/soniox');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static('../browser'));
+app.use(express.static(path.join(__dirname, '../browser')));
 
 app.post('/api/translate', async (req, res) => {
   try {
     const { source_language, text } = req.body;
-    if (!text || typeof text !== 'string' || !text.trim()) {
-      return res.status(400).json({ error: 'Please provide text to translate.' });
-    }
-
-    const language = source_language || 'English';
-    const systemPrompt = `You are a friendly language learning assistant. Translate text from Kannada, Telugu, or English into clear, natural English. If the input is already English, keep the meaning and improve readability without changing the meaning. Respond in JSON with two keys: "translation" and "note".`;
-    const userPrompt = `Source language: ${language}
-Text: ${text.trim()}`;
-
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      max_tokens: 400,
-    });
-
-    const raw = response?.content?.[0]?.text?.trim() || '';
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parsed = {
-        translation: raw,
-        note: 'Translation generated. If the output is not valid JSON, check the server logs.',
-      };
-    }
-
-    return res.json(parsed);
+    const result = await translateToEnglish(source_language, text);
+    return res.json(result);
   } catch (err) {
     console.error('Translate error:', err);
-    return res.status(500).json({ error: 'Translation failed. Please try again.' });
+    const message = err.message || 'Translation failed. Please try again.';
+    const status = message.includes('Provide text') ? 400 : 500;
+    return res.status(status).json({ error: message });
+  }
+});
+
+app.post('/api/stt', async (req, res) => {
+  try {
+    const { audio_b64, mime_type, source_language } = req.body;
+    if (!audio_b64 || typeof audio_b64 !== 'string') {
+      return res.status(400).json({ error: 'Provide audio_b64 for speech transcription.' });
+    }
+    const result = await transcribeAudioBase64(audio_b64, mime_type, source_language);
+    return res.json(result);
+  } catch (err) {
+    console.error('STT error:', err);
+    const message = err.message || 'Speech transcription failed.';
+    const status = message.includes('Provide') || message.includes('No speech') ? 400 : 500;
+    return res.status(status).json({ error: message });
+  }
+});
+
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text } = req.body;
+    const result = await synthesizeEnglishSpeech(text);
+    return res.json(result);
+  } catch (err) {
+    console.error('TTS error:', err);
+    const message = err.message || 'Text-to-speech generation failed.';
+    const status = message.includes('Provide') ? 400 : 500;
+    return res.status(status).json({ error: message });
   }
 });
 
 app.get('/', (req, res) => {
-  res.sendFile('index.html', { root: '../browser' });
+  res.sendFile(path.join(__dirname, '../browser/index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`
-Language learning server running at http://localhost:${PORT}`);
+  console.log(`KTH-E voice learner running at http://localhost:${PORT}`);
 });

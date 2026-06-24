@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vercel dev",
+    "dev:local": "cd server && node index.js",
     "build": "echo \"No build needed\"",
     "start": "vercel dev"
   },

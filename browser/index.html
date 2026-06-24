@@ -3,277 +3,419 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kannada / Telugu / English Learner</title>
+<title>KTH-E — Voice Language Learner</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #090505; color: #f4f4f4; font-family: 'DM Mono', monospace; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .page { width: min(980px, 100%); display: grid; gap: 24px; }
-  header { display: flex; flex-direction: column; gap: 12px; }
-  .title { font-family: 'DM Serif Display', serif; font-size: 3rem; letter-spacing: -0.04em; }
+  body {
+    background: radial-gradient(circle at top, #1a0d0d 0%, #090505 55%);
+    color: #f4f4f4;
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .page { width: min(720px, 100%); display: grid; gap: 20px; }
+  header { text-align: center; display: grid; gap: 10px; }
+  .title { font-family: 'DM Serif Display', serif; font-size: clamp(2rem, 6vw, 2.8rem); letter-spacing: -0.04em; }
   .title span { color: #ff4d4f; }
-  .subtitle { max-width: 720px; color: #f0c6c6; line-height: 1.7; }
-  .card { background: #120909; border: 1px solid #3d0e0e; border-radius: 24px; padding: 28px; display: grid; gap: 20px; }
-  .panel-label { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: #d18b8b; }
-  .form-grid { display: grid; gap: 18px; }
-  .form-row { display: grid; gap: 10px; }
+  .subtitle { color: #d8b2b2; line-height: 1.6; font-size: 0.92rem; }
+  .card {
+    background: rgba(18, 9, 9, 0.92);
+    border: 1px solid #3d0e0e;
+    border-radius: 24px;
+    padding: 24px;
+    display: grid;
+    gap: 18px;
+  }
+  .panel-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #d18b8b;
+  }
   label { font-size: 0.8rem; color: #d8b2b2; }
-  select, textarea, button { width: 100%; font: inherit; }
-  select, textarea { background: #1a0d0d; border: 1px solid #3d0e0e; border-radius: 14px; color: #f4f4f4; padding: 14px 16px; outline: none; }
-  textarea { min-height: 160px; resize: vertical; }
-  button { background: #ff4d4f; color: #ffffff; border: none; border-radius: 14px; padding: 14px 18px; cursor: pointer; transition: transform 0.2s ease, background 0.2s ease; }
-  button:hover:not(:disabled) { transform: translateY(-1px); background: #ff3436; }
-  button:disabled { opacity: 0.55; cursor: not-allowed; }
-  .row { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
-  .row > .card { min-height: 260px; }
-  .result { display: grid; gap: 12px; padding: 18px; border: 1px solid #3d0e0e; border-radius: 18px; background: rgba(255, 77, 79, 0.08); }
-  .result-title { color: #ff4d4f; font-size: 0.9rem; letter-spacing: 0.12em; text-transform: uppercase; }
-  .result-text { white-space: pre-wrap; line-height: 1.7; }
-  .examples { display: grid; gap: 12px; }
-  .example { background: #180b0b; border: 1px solid #3d0e0e; border-radius: 16px; padding: 16px; }
+  select {
+    width: 100%;
+    background: #1a0d0d;
+    border: 1px solid #3d0e0e;
+    border-radius: 14px;
+    color: #f4f4f4;
+    padding: 14px 16px;
+    font: inherit;
+    outline: none;
+  }
+  .mic-wrap { display: grid; justify-items: center; gap: 14px; padding: 8px 0 4px; }
+  .mic-btn {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid #ff4d4f;
+    background: #1a0d0d;
+    color: #ff4d4f;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.35);
+  }
+  .mic-btn:hover:not(:disabled) { transform: scale(1.03); }
+  .mic-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .mic-btn.recording {
+    background: #ff4d4f;
+    color: #fff;
+    animation: pulse 1.4s ease infinite;
+  }
+  .mic-btn.processing {
+    border-color: #ffb347;
+    color: #ffb347;
+  }
+  .mic-btn.speaking {
+    border-color: #6ee7b7;
+    color: #6ee7b7;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.45); }
+    50% { box-shadow: 0 0 0 18px rgba(255, 77, 79, 0); }
+  }
+  .mic-icon { width: 42px; height: 42px; }
+  .mic-label { font-size: 0.85rem; color: #d8b2b2; text-align: center; min-height: 1.2em; }
+  .status {
+    text-align: center;
+    color: #bfc3c7;
+    font-size: 0.88rem;
+    min-height: 1.4em;
+    line-height: 1.5;
+  }
+  .status.error { color: #ff6b6b; }
+  .result {
+    display: grid;
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid #3d0e0e;
+    border-radius: 16px;
+    background: rgba(255, 77, 79, 0.06);
+    min-height: 88px;
+  }
+  .result-title {
+    color: #ff4d4f;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .result-text {
+    white-space: pre-wrap;
+    line-height: 1.65;
+    color: #f4f4f4;
+    font-size: 0.95rem;
+  }
+  .result-text.muted { color: #9a8a8a; font-style: italic; }
+  .examples { display: grid; gap: 10px; }
+  .example {
+    background: #180b0b;
+    border: 1px solid #3d0e0e;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
   .example strong { color: #ff4d4f; }
-  .footnote { color: #d8b2b2; font-size: 0.85rem; line-height: 1.6; }
-  .hidden { display: none; }
-  .button-group { display: flex; gap: 12px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
 <div class="page">
   <header>
-    <div class="title">Voice Language Learner <span>to English</span></div>
-    <div class="subtitle">Speak naturally in Kannada, Telugu, or English. The voice-first flow is: user speaks → STT transcription → Claude translation / note generation → TTS playback of English output.</div>
+    <div class="title">KTH-E <span>Voice Learner</span></div>
+    <div class="subtitle">Speak in Kannada, Telugu, Hindi, or English. Tap to record, tap again to stop — then hear the English translation aloud.</div>
   </header>
 
   <div class="card">
-    <div class="panel-label">Input</div>
-    <div class="form-grid">
-      <div class="form-row">
-        <label for="source-language">Source language</label>
-        <select id="source-language">
-          <option value="Kannada">Kannada</option>
-          <option value="Telugu">Telugu</option>
-          <option value="English">English</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label for="source-text">Text or transcribed speech</label>
-        <textarea id="source-text" placeholder="Enter text or record speech to transcribe..."></textarea>
-      </div>
-      <div class="button-group">
-        <button id="record-btn">Record speech</button>
-        <button id="translate-btn">Translate to English</button>
-        <button id="play-btn" disabled>Play English audio</button>
-      </div>
+    <div class="panel-label">Your language</div>
+    <div class="form-row">
+      <label for="source-language">I am speaking</label>
+      <select id="source-language">
+        <option value="Kannada">Kannada</option>
+        <option value="Telugu">Telugu</option>
+        <option value="Hindi">Hindi</option>
+        <option value="English">English</option>
+      </select>
     </div>
-    <div id="status-text" class="footnote">Use the record button for voice input or paste Kannada, Telugu, or English text.</div>
+
+    <div class="mic-wrap">
+      <button id="mic-btn" class="mic-btn" type="button" aria-label="Start recording">
+        <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+      <div id="mic-label" class="mic-label">Tap to start recording</div>
+    </div>
+    <div id="status-text" class="status">Ready when you are.</div>
   </div>
 
-  <div class="row">
-    <div class="card result">
-      <div class="result-title">English Translation</div>
-      <div id="translation-output" class="result-text">Translation appears here.</div>
+  <div class="card">
+    <div class="result">
+      <div class="result-title">You said</div>
+      <div id="transcript-output" class="result-text muted">Your speech will appear here.</div>
     </div>
-    <div class="card result">
+    <div class="result">
+      <div class="result-title">English</div>
+      <div id="translation-output" class="result-text muted">Translation appears here.</div>
+    </div>
+    <div class="result">
       <div class="result-title">Learning note</div>
-      <div id="note-output" class="result-text">Notes appear here.</div>
+      <div id="note-output" class="result-text muted">A short tip will appear here.</div>
     </div>
   </div>
 
   <div class="card examples">
-    <div class="panel-label">Example phrases</div>
+    <div class="panel-label">Try saying</div>
     <div class="example"><strong>Kannada:</strong> ನಾನು ಬೆಂಗಳೂರಿನಲ್ಲಿ ಇದ್ದೇನೆ</div>
     <div class="example"><strong>Telugu:</strong> నేను హైదరాబాద్లో ఉన్నాను</div>
+    <div class="example"><strong>Hindi:</strong> मैं दिल्ली में रहता हूँ</div>
     <div class="example"><strong>English:</strong> I am practicing my language skills.</div>
   </div>
 </div>
 
 <script>
-const sourceText = document.getElementById('source-text');
 const sourceLanguage = document.getElementById('source-language');
-const translateBtn = document.getElementById('translate-btn');
-const recordBtn = document.getElementById('record-btn');
-const playBtn = document.getElementById('play-btn');
+const micBtn = document.getElementById('mic-btn');
+const micLabel = document.getElementById('mic-label');
 const statusText = document.getElementById('status-text');
+const transcriptOutput = document.getElementById('transcript-output');
 const translationOutput = document.getElementById('translation-output');
 const noteOutput = document.getElementById('note-output');
 
+/** @type {'idle'|'recording'|'processing'|'speaking'} */
+let phase = 'idle';
 let mediaRecorder = null;
+let mediaStream = null;
 let audioChunks = [];
-let recording = false;
-let audioContext = null;
-let currentAudioB64 = '';
+let recordingMime = 'audio/webm';
+let activeAudio = null;
 
-async function initAudioContext() {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
+function pickMimeType() {
+  if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) return 'audio/webm;codecs=opus';
+  if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
+  if (MediaRecorder.isTypeSupported('audio/mp4')) return 'audio/mp4';
+  return '';
 }
 
-async function setStatus(message, isError = false) {
-  statusText.textContent = message;
-  statusText.style.color = isError ? '#ff6b6b' : '#bfc3c7';
-}
+function setPhase(next) {
+  phase = next;
+  micBtn.classList.remove('recording', 'processing', 'speaking');
+  micBtn.disabled = next === 'processing' || next === 'speaking';
 
-recordBtn.addEventListener('click', async () => {
-  if (!recording) {
-    await startRecording();
+  if (next === 'recording') {
+    micBtn.classList.add('recording');
+    micLabel.textContent = 'Tap to stop recording';
+    micBtn.setAttribute('aria-label', 'Stop recording');
+  } else if (next === 'processing') {
+    micBtn.classList.add('processing');
+    micLabel.textContent = 'Processing…';
+    micBtn.setAttribute('aria-label', 'Processing');
+  } else if (next === 'speaking') {
+    micBtn.classList.add('speaking');
+    micLabel.textContent = 'Playing English audio…';
+    micBtn.setAttribute('aria-label', 'Playing audio');
   } else {
-    stopRecording();
+    micLabel.textContent = 'Tap to start recording';
+    micBtn.setAttribute('aria-label', 'Start recording');
   }
-});
+}
 
-translateBtn.addEventListener('click', async () => {
-  await translateText();
-});
+function setStatus(message, isError = false) {
+  statusText.textContent = message;
+  statusText.classList.toggle('error', isError);
+}
 
-playBtn.addEventListener('click', async () => {
-  if (currentAudioB64) {
-    await playAudio(currentAudioB64);
+function stopPlayback() {
+  if (activeAudio) {
+    activeAudio.pause();
+    activeAudio = null;
   }
-});
+}
 
-async function startRecording() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-    audioChunks = [];
+function cleanupStream() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    try { mediaRecorder.stop(); } catch (_) {}
+  }
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((t) => t.stop());
+    mediaStream = null;
+  }
+  mediaRecorder = null;
+}
 
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        audioChunks.push(event.data);
-      }
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(String(reader.result).split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function playMp3Base64(audioB64) {
+  stopPlayback();
+  const bytes = Uint8Array.from(atob(audioB64), (c) => c.charCodeAt(0));
+  const blob = new Blob([bytes], { type: 'audio/mpeg' });
+  const url = URL.createObjectURL(blob);
+
+  return new Promise((resolve, reject) => {
+    const audio = new Audio(url);
+    activeAudio = audio;
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      activeAudio = null;
+      resolve();
     };
-
-    mediaRecorder.onstop = async () => {
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = reader.result.split(',')[1];
-        await transcribeSpeech(base64);
-      };
-      reader.readAsDataURL(blob);
+    audio.onerror = () => {
+      URL.revokeObjectURL(url);
+      activeAudio = null;
+      reject(new Error('Could not play audio.'));
     };
-
-    mediaRecorder.start();
-    recording = true;
-    recordBtn.textContent = 'Stop recording';
-    setStatus('Recording speech — click again to stop.');
-  } catch (err) {
-    console.error(err);
-    setStatus('Unable to access microphone.', true);
-  }
+    audio.play().catch(reject);
+  });
 }
 
-function stopRecording() {
-  if (mediaRecorder && recording) {
-    mediaRecorder.stop();
-    recording = false;
-    recordBtn.textContent = 'Record speech';
-    setStatus('Processing speech transcription...');
-  }
+async function transcribeSpeech(audioB64) {
+  const response = await fetch('/api/stt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      audio_b64: audioB64,
+      mime_type: recordingMime,
+      source_language: sourceLanguage.value,
+    }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Speech transcription failed.');
+  return data.text || '';
 }
 
-async function transcribeSpeech(audio_b64) {
-  try {
-    const response = await fetch('/api/stt', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ audio_b64, mime_type: 'audio/webm' })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Speech transcription failed.');
-    }
-
-    sourceText.value = data.text || '';
-    setStatus('Speech recognized. Edit the text or translate it now.');
-    await translateText();
-  } catch (err) {
-    console.error(err);
-    setStatus(err.message || 'Speech transcription failed.', true);
-  }
-}
-
-async function translateText() {
-  const text = sourceText.value.trim();
-  const source_language = sourceLanguage.value;
-
-  if (!text) {
-    setStatus('Enter text or record speech first.', true);
-    return;
-  }
-
-  translateBtn.disabled = true;
-  playBtn.disabled = true;
-  setStatus('Translating text...');
-
-  try {
-    const response = await fetch('/api/translate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source_language, text })
-    });
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Translation failed.');
-    }
-
-    translationOutput.textContent = data.translation || 'No translation returned.';
-    noteOutput.textContent = data.note || 'No note returned.';
-    setStatus('Translation ready. Generating English audio...');
-    await generateSpeech(data.translation || '');
-  } catch (err) {
-    console.error(err);
-    setStatus(err.message || 'Translation failed.', true);
-  } finally {
-    translateBtn.disabled = false;
-  }
+async function translateText(text) {
+  const response = await fetch('/api/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source_language: sourceLanguage.value, text }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Translation failed.');
+  return data;
 }
 
 async function generateSpeech(text) {
-  try {
-    await initAudioContext();
-    const response = await fetch('/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    });
-    const data = await response.json();
+  const response = await fetch('/api/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Text-to-speech failed.');
+  return data;
+}
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Text-to-speech generation failed.');
-    }
+async function runVoicePipeline(audioB64) {
+  setPhase('processing');
+  setStatus('Transcribing your speech…');
 
-    currentAudioB64 = data.audio_b64 || '';
-    if (currentAudioB64) {
-      playBtn.disabled = false;
-      setStatus('English audio is ready. Click Play English audio.');
-    } else {
-      throw new Error('No audio returned.');
+  const text = await transcribeSpeech(audioB64);
+  transcriptOutput.textContent = text;
+  transcriptOutput.classList.remove('muted');
+
+  setStatus('Translating to English…');
+  const { translation, note } = await translateText(text);
+  translationOutput.textContent = translation;
+  noteOutput.textContent = note || '—';
+  translationOutput.classList.remove('muted');
+  noteOutput.classList.remove('muted');
+
+  setStatus('Generating English audio…');
+  const tts = await generateSpeech(translation);
+
+  setPhase('speaking');
+  setStatus('Playing English translation…');
+  await playMp3Base64(tts.audio_b64);
+
+  setPhase('idle');
+  setStatus('Done. Tap the mic to speak again.');
+}
+
+async function startRecording() {
+  stopPlayback();
+  transcriptOutput.textContent = 'Your speech will appear here.';
+  translationOutput.textContent = 'Translation appears here.';
+  noteOutput.textContent = 'A short tip will appear here.';
+  transcriptOutput.classList.add('muted');
+  translationOutput.classList.add('muted');
+  noteOutput.classList.add('muted');
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: {
+      channelCount: 1,
+      echoCancellation: true,
+      noiseSuppression: true,
+    },
+  });
+  mediaStream = stream;
+  audioChunks = [];
+
+  const mimeType = pickMimeType();
+  recordingMime = mimeType || 'audio/webm';
+  mediaRecorder = mimeType
+    ? new MediaRecorder(stream, { mimeType })
+    : new MediaRecorder(stream);
+
+  mediaRecorder.ondataavailable = (event) => {
+    if (event.data.size > 0) audioChunks.push(event.data);
+  };
+
+  mediaRecorder.onstop = async () => {
+    cleanupStream();
+    try {
+      const blob = new Blob(audioChunks, { type: recordingMime });
+      const audioB64 = await blobToBase64(blob);
+      await runVoicePipeline(audioB64);
+    } catch (err) {
+      console.error(err);
+      setPhase('idle');
+      setStatus(err.message || 'Something went wrong.', true);
     }
-  } catch (err) {
-    console.error(err);
-    setStatus(err.message || 'Could not generate speech.', true);
+  };
+
+  mediaRecorder.start(100);
+  setPhase('recording');
+  setStatus('Listening… tap again when you finish speaking.');
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
   }
 }
 
-async function playAudio(audio_b64) {
+micBtn.addEventListener('click', async () => {
+  if (phase === 'processing' || phase === 'speaking') return;
+
+  if (phase === 'recording') {
+    stopRecording();
+    return;
+  }
+
   try {
-    await initAudioContext();
-    const audioData = Uint8Array.from(atob(audio_b64), c => c.charCodeAt(0)).buffer;
-    const decoded = await audioContext.decodeAudioData(audioData);
-    const source = audioContext.createBufferSource();
-    source.buffer = decoded;
-    source.connect(audioContext.destination);
-    source.start();
-    setStatus('Playing English audio.');
+    await startRecording();
   } catch (err) {
     console.error(err);
-    setStatus('Could not play audio.', true);
+    cleanupStream();
+    setPhase('idle');
+    setStatus('Microphone access denied or unavailable.', true);
   }
-}
+});
 </script>
 </body>
 </html>

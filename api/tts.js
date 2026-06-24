@@ -1,8 +1,4 @@
-const { SonioxNodeClient } = require('@soniox/node');
-
-function createSonioxClient() {
-  return new SonioxNodeClient({ apiKey: process.env.SONIOX_API_KEY });
-}
+const { synthesizeEnglishSpeech } = require('../lib/soniox');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -12,24 +8,12 @@ module.exports = async (req, res) => {
 
   try {
     const { text } = req.body;
-    if (!text || typeof text !== 'string' || !text.trim()) {
-      return res.status(400).json({ error: 'Provide text to generate speech.' });
-    }
-
-    const sonioxClient = createSonioxClient();
-    const audio = await sonioxClient.tts.generate({
-      text: text.trim(),
-      voice: 'Adrian',
-      model: 'tts-rt-v1',
-      language: 'en',
-      audio_format: 'wav',
-      sample_rate: 24000
-    });
-
-    const audioBuffer = Buffer.from(audio);
-    return res.status(200).json({ audio_b64: audioBuffer.toString('base64') });
+    const result = await synthesizeEnglishSpeech(text);
+    return res.status(200).json(result);
   } catch (err) {
-    console.error('TTS error:', err?.response?.data || err.message || err);
-    return res.status(500).json({ error: 'Text-to-speech generation failed.' });
+    console.error('TTS error:', err?.bodyText || err.message || err);
+    const message = err.message || 'Text-to-speech generation failed.';
+    const status = message.includes('Provide') ? 400 : 500;
+    return res.status(status).json({ error: message });
   }
 };
