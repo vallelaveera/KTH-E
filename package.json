@@ -3,14 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "sync-env": "node scripts/sync-env.js",
+    "test:apis": "node scripts/sync-env.js && node scripts/test-apis.js",
+    "test:http": "node scripts/test-http.js",
+    "test:e2e": "node scripts/test-e2e.js",
     "dev": "vercel dev",
-    "dev:local": "cd server && node index.js",
+    "dev:local": "node scripts/sync-env.js && cd server && node index.js",
     "build": "echo \"No build needed\"",
     "start": "vercel dev"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
     "@soniox/node": "^2.1.0",
-    "axios": "^1.17.0"
+    "axios": "^1.17.0",
+    "dotenv": "^17.4.2"
   }
 }

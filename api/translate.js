@@ -1,3 +1,5 @@
+require('../lib/load-env').loadEnv();
+
 const { translateToEnglish } = require('../lib/translate');
 
 module.exports = async (req, res) => {

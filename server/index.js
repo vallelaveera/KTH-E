@@ -1,9 +1,9 @@
-require('dotenv').config();
+const path = require('path');
+require('../lib/load-env').loadEnv();
 
 const express = require('express');
-const path = require('path');
 const { translateToEnglish } = require('../lib/translate');
-const { transcribeAudioBase64, synthesizeEnglishSpeech } = require('../lib/soniox');
+const { transcribeAudioBase64, translateAudioToEnglish, synthesizeEnglishSpeech } = require('../lib/soniox');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,6 +20,27 @@ app.post('/api/translate', async (req, res) => {
     console.error('Translate error:', err);
     const message = err.message || 'Translation failed. Please try again.';
     const status = message.includes('Provide text') ? 400 : 500;
+    return res.status(status).json({ error: message });
+  }
+});
+
+app.post('/api/voice', async (req, res) => {
+  try {
+    const { audio_b64, mime_type, source_language } = req.body;
+    if (!audio_b64 || typeof audio_b64 !== 'string') {
+      return res.status(400).json({ error: 'Provide audio_b64 for speech processing.' });
+    }
+    const result = await translateAudioToEnglish(audio_b64, mime_type, source_language);
+    return res.json(result);
+  } catch (err) {
+    console.error('Voice error:', err);
+    const message = err.message || 'Voice processing failed.';
+    const status =
+      message.includes('Provide') ||
+      message.includes('No speech') ||
+      message.includes('not configured')
+        ? 400
+        : 500;
     return res.status(status).json({ error: message });
   }
 });

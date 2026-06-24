@@ -1,3 +1,5 @@
+require('../lib/load-env').loadEnv();
+
 const { synthesizeEnglishSpeech } = require('../lib/soniox');
 
 module.exports = async (req, res) => {

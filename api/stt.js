@@ -1,3 +1,5 @@
+require('../lib/load-env').loadEnv();
+
 const { transcribeAudioBase64 } = require('../lib/soniox');
 
 module.exports = async (req, res) => {
