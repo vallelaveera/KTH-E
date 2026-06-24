@@ -1,0 +1,15 @@
+{
+  "name": "kannada-telugu-english-learner",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo \"No build needed\"",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
+    "@soniox/node": "^2.1.0",
+    "axios": "^1.17.0"
+  }
+}
